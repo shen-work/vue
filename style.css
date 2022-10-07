@@ -1,0 +1,19 @@
+body{
+    background:#222;
+    color: #fff;
+    margin: 0px;
+    padding: 0px;
+    text-align: center;
+}
+
+input[type="button"]{
+    cursor: pointer;
+}
+input[type="button"]:hover{
+    background: #00f;
+    color: #fff;
+}
+
+.pop{
+    position: absolute;
+}
