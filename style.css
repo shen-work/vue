@@ -17,3 +17,35 @@ input[type="button"]:hover{
 .pop{
     position: absolute;
 }
+
+#Vue{
+    margin: 10px;
+    padding: 10px;
+}
+
+#Map{
+
+    background: #555;
+
+}
+
+#Map>div{
+
+    border: 1px solid #fff;
+    background: #555;
+    display: inline-block;
+}
+
+#Map .player{
+    position: absolute;
+    margin: 4px;
+    border: 1px solid #fff;
+}
+
+#Map .player.red{
+    background: #f00;
+}
+
+#Map .player.blue{
+    background: #00f;
+}
