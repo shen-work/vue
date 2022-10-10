@@ -196,6 +196,13 @@
                 Ex.flag.VoiceMoveTime = new Date().getTime();
 
 
+                var voice_word = e.results[e.results.length-1][0].transcript;
+
+                delete e.results;
+
+                console.log(e);
+
+
                 var x = player.x;
                 var y = player.y;
 
@@ -584,8 +591,7 @@
                             
                             console.log(e);
                             
-                            var voice_word = e.results[e.results.length-1][0].transcript
-                            ;
+                            var voice_word = e.results[e.results.length-1][0].transcript;
 
                             console.log(voice_word);
 
@@ -600,7 +606,7 @@
                             Ex.func.VoiceAction(
                                 this.map_info,
                                 this.players.red,
-                                voice_word);
+                                e);
 
 
                         };
