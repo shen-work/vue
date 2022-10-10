@@ -5,6 +5,7 @@
             db_url:"https://voice-game-ea25d-default-rtdb.firebaseio.com/",
             db_time:firebase.database.ServerValue.TIMESTAMP,
             storage:"local",
+            
         },
         flag:{
             db_time:null,
@@ -150,6 +151,40 @@
                 player.x = x;
                 player.y = y;
             },
+            CheckMove:function(map_info,player,set){
+
+                var max = {
+                    x:map_info.width/map_info.grid_size,
+                    y:map_info.height/map_info.grid_size
+                }
+
+                var _x = player.x;
+                var _y = player.y;
+
+                for(var key in set){
+                    player[key] = set[key];
+                }
+
+                for(var xy of ["x","y"]){
+
+                    player[xy] = (player[xy]<0)?0:player[xy];
+                    player[xy] = (player[xy]>max[xy]-1)?max[xy]-1:player[xy];
+                }
+
+
+                map_info.site.forEach(site=>{
+
+                    if(player.x===site.x && player.y===site.y && site.player!==player.id){
+
+                        player.x = _x;
+                        player.y = _y;
+                    }
+
+                });
+                
+
+
+            },
             VoiceAction:function(map_info,player,voice_word){
 
 
@@ -164,8 +199,6 @@
                 var x = player.x;
                 var y = player.y;
 
-                var max_x = map_info.width/map_info.grid_size;
-                var max_y = map_info.height/map_info.grid_size;
 
 
                 var DB_path = `${Ex.flag.DB_path}/players/${player.id}`;
@@ -197,36 +230,73 @@
 
                 if(voice_word.indexOf("上")!==-1){
                     
+                    Ex.func.CheckMove(
+                        map_info,
+                        player,
+                        {
+                            x:x,
+                            y:y-1
+                        }
+                    );
+
+                    /*
                     if(player.y<=0) return;
 
-                    player.y = y-1;
+                    player.y = y-1;*/
                     Ex.DB.ref(DB_path).update(player);
                     return;
                 }
 
                 if(voice_word.indexOf("左")!==-1){
                     
+                    Ex.func.CheckMove(
+                        map_info,
+                        player,
+                        {
+                            x:x-1,
+                            y:y
+                        }
+                    );
+                    /*
                     if(player.x<=0) return;
 
-                    player.x = x-1;
+                    player.x = x-1;*/
                     Ex.DB.ref(DB_path).update(player);
                     return;
                 }
 
                 if(voice_word.indexOf("下")!==-1){
                     
+                    Ex.func.CheckMove(
+                        map_info,
+                        player,
+                        {
+                            x:x,
+                            y:y+1
+                        }
+                    );
+                    /*
                     if(player.y>=max_y) return;
 
-                    player.y = y+1;
+                    player.y = y+1;*/
                     Ex.DB.ref(DB_path).update(player);
                     return;
                 }
 
                 if(voice_word.indexOf("右")!==-1){
                     
+                    Ex.func.CheckMove(
+                        map_info,
+                        player,
+                        {
+                            x:x+1,
+                            y:y
+                        }
+                    );
+                    /*
                     if(player.x>=max_x) return;
 
-                    player.x = x+1;
+                    player.x = x+1;*/
                     Ex.DB.ref(DB_path).update(player);
                     return;
                 }
@@ -316,16 +386,32 @@
                 Ex.flag.game.site = Object.values(Ex.flag.game.site||{})||[];
 
 
+
                 Object.keys(Ex.flag.game.players).forEach(player=>{
 
-                    Ex.flag.game.site.push({
 
+                    var check_site = true;
+                    Ex.flag.game.site.forEach(site=>{
+
+                        if(site.x===Ex.flag.game.players[player].x &&
+                            site.y===Ex.flag.game.players[player].y &&
+                            site.player===player)
+                            {
+                                check_site = false;
+                            }                            
+                    });
+
+                    if(check_site)
+                    Ex.flag.game.site.push({
+        
                         x:Ex.flag.game.players[player].x,
                         y:Ex.flag.game.players[player].y,
                         player:player
                     })
+                    
 
                 });
+
                 
 
                 Ex.DB.ref(Ex.flag.DB_path).update(Ex.flag.game);
@@ -358,7 +444,7 @@
                                 site:Ex.flag.game.site
                             },
                             players:Ex.flag.game.players,
-                            record:Ex.func.VoiceRec(),
+                            //record:Ex.func.VoiceRec(),
                             word_actions:["上","下","右","左","開"],
                             word_actions2:["上","下","右","左","開"]
                         }
@@ -423,20 +509,23 @@
                                 )
 
                                 var check_site = true;
-                                Object.values(r.site).forEach(site=>{
+                                Object.keys(r.site).forEach(key=>{
 
-                                    if(site.x===x && 
-                                        site.y===y && 
-                                        site.player===player){
+                                    var site = r.site[key];
+
+                                    if(site.x===x && site.y===y){
+
+                                        if(site.player===player){
 
                                             check_site = false;
-                                        }
-                                });
 
+                                        }
+                                        
+                                    }
+                                });
 
                                 
                                 if(check_site){
-
 
                                     Ex.DB.ref(`${Ex.flag.DB_path}/site`).push({
                                         x:x,
@@ -444,18 +533,30 @@
                                         player:player
                                     })
                                 }
+
+
+
                             });
 
-                            Object.values(r.site).forEach(db=>{
+                            Object.keys(r.site).forEach(key=>{
+
+                                var db = r.site[key];
 
                                 var check_site = true;
-                                this.map_info.site.forEach(local=>{
+                                this.map_info.site.forEach((local,idx)=>{
                                     
                                     if(db.x===local.x && 
-                                        db.y===local.y && 
-                                        db.player===local.player){
+                                        db.y===local.y){
 
-                                            check_site = false;
+                                            if(db.player===local.player){
+
+                                                check_site = false;
+
+                                            }else{
+    
+                                                this.map_info.site.splice(idx,1);
+                                            }
+                                            
                                         }
 
                                 });
@@ -475,13 +576,18 @@
 
                             
                         });
+
+                        Ex.flag.voice = Ex.func.VoiceRec();
                         
 
-                        this.record.onresult = (e)=>{
+                        Ex.flag.voice.onresult = (e)=>{
                             
+                            console.log(e);
                             
                             var voice_word = e.results[e.results.length-1][0].transcript
                             ;
+
+                            console.log(voice_word);
 
                             /*
                             Object.values(e.results).forEach(r => {
@@ -491,9 +597,6 @@
                             });
                             */
 
-                            var red = this.players.red;
-
-
                             Ex.func.VoiceAction(
                                 this.map_info,
                                 this.players.red,
@@ -502,7 +605,7 @@
 
                         };
 
-                        //this.record.start();
+                        Ex.flag.voice.start();
 
                             
                     }
