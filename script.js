@@ -110,7 +110,15 @@
             },
             VoiceRec:()=>{
 
-                var record = new webkitSpeechRecognition()
+                try{
+
+                    var record = new webkitSpeechRecognition();
+
+                }catch(e){
+
+                    alert("該瀏覽器不支援此系統");
+                    return;
+                }
 
                 record.continuous = true;
                 record.interimResults = true;
@@ -196,11 +204,6 @@
                 Ex.flag.VoiceMoveTime = new Date().getTime();
 
 
-                var voice_word = e.results[e.results.length-1][0].transcript;
-
-                delete e.results;
-
-                console.log(e);
 
 
                 var x = player.x;
@@ -264,6 +267,7 @@
                             y:y
                         }
                     );
+                    
                     /*
                     if(player.x<=0) return;
 
@@ -282,6 +286,7 @@
                             y:y+1
                         }
                     );
+                    
                     /*
                     if(player.y>=max_y) return;
 
@@ -300,6 +305,7 @@
                             y:y
                         }
                     );
+                    
                     /*
                     if(player.x>=max_x) return;
 
@@ -587,9 +593,16 @@
                         Ex.flag.voice = Ex.func.VoiceRec();
                         
 
+                        Ex.flag.voice.onend = ()=>{
+                            Ex.flag.voice.start();
+                        }
+                        
+                        //Ex.flag.voice.abort();
+
                         Ex.flag.voice.onresult = (e)=>{
                             
-                            console.log(e);
+                            
+                            console.log(e.results);
                             
                             var voice_word = e.results[e.results.length-1][0].transcript;
 
@@ -606,7 +619,7 @@
                             Ex.func.VoiceAction(
                                 this.map_info,
                                 this.players.red,
-                                e);
+                                voice_word);
 
 
                         };
