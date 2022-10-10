@@ -315,7 +315,8 @@
                 }
 
                 
-
+                Ex.flag.voice.stop();
+                
             }
 
         },
