@@ -1,3 +1,17 @@
+/*
+Ex.flag.game.site.sort((a,b)=>{
+
+
+    return (a.x-b.x===0)?(a.y-b.y):a.x-b.x
+
+
+}).forEach(v=>{
+
+    console.log(v.x,v.y,v.player)
+
+});
+*/
+
 (()=>{
     Ex = {
         id:"vue",
@@ -13,7 +27,8 @@
                 get:(row)=>{
                     return new URL(location.href).searchParams.get(row);
                 }
-            }
+            },
+            Delay:{}
             
         },
         func:{
@@ -108,6 +123,21 @@
 
                 return str;
             },
+            Delay:(KeyName,time,func)=>{
+
+
+                if(new Date().getTime() - Ex.flag.Delay[KeyName]<time){
+
+                    if(typeof(func)==="function") func();
+                    
+                    return false;
+                }
+                Ex.flag.Delay[KeyName] = new Date().getTime();
+
+
+                return true;
+
+            },
             VoiceRec:()=>{
 
                 try{
@@ -140,26 +170,158 @@
 
                 return record;
             },
-            RandMove:function(player,max_x,max_y){
-                var x = player.x;
-                var y = player.y;
+            AI:function(ai_name,player){
 
 
-                x+=(Math.random()>0.5)?-1:1;
-                y+=(Math.random()>0.5)?-1:1;
+                var map_info = Ex.flag.game.map_info;
 
-                if(x>=max_x) x-=2;
-                else if(x-1<=0) x+=2;
+                var max = {
+                    x:map_info.width/map_info.grid_size,
+                    y:map_info.height/map_info.grid_size
+                }
+
+                
+                var command_ary = [
+                    //"開",
+                    "上",
+                    "下",
+                    "右",
+                    "左"
+                ];
+
+          
+                if(player.x>=max.x-1) command_ary.splice(command_ary.indexOf("右"),1);
+                if(player.y>=max.y-1) command_ary.splice(command_ary.indexOf("下"),1);
+                if(player.x<=0) command_ary.splice(command_ary.indexOf("左"),1);
+                if(player.y<=0) command_ary.splice(command_ary.indexOf("上"),1);
+   
 
 
-                if(y>=max_y) y-=2;
-                else if(y<0) y+=2;
+            
+
+                var check;
+                command_ary.forEach(c=>{
+
+                    switch (c){
+
+                        case "上":
+
+                            Ex.flag.game.site.forEach(site=>{
+
+                                var _y = player.y;
+                                while(_y>=0){
+
+                                    check = true;
+                                    if(site.x===player.x && site.y!==_y){
+                                        check = false;
+
+                                    }
+                                    _y--;
+                                }
+                            });
+
+                            if(check){
+                                command_ary.splice(command_ary.indexOf("上"),1);
+                            }
 
 
-                player.x = x;
-                player.y = y;
+                            
+                        break;
+                        case "下":
+                            
+                            Ex.flag.game.site.forEach(site=>{
+
+                                var _y = player.y;
+                                while(_y<=max.y-1){
+
+                                    check = true;
+                                    if(site.x===player.x && site.y!==_y){
+                                        check = false;
+
+                                    }
+                                    _y++;
+                                }
+                            });
+
+                            if(check){
+                                command_ary.splice(command_ary.indexOf("下"),1);
+                            }
+
+
+                        break;
+                        case "右":
+                            
+                        
+                            Ex.flag.game.site.forEach(site=>{
+
+                                var _x = player.x;
+                                while(_x<=max.x-1){
+
+                                    check = true;
+                                    if(site.x!==_x && site.y===player.y){
+                                        check = false;
+
+                                    }
+                                    _x++;
+                                }
+                            });
+
+                            if(check){
+                                command_ary.splice(command_ary.indexOf("右"),1);
+                            }
+
+                        break;
+                        case "左":
+                            
+                            Ex.flag.game.site.forEach(site=>{
+
+                                var _x = player.x;
+                                while(_x>=0){
+
+                                    check = true;
+                                    if(site.x!==_x && site.y===player.y){
+                                        check = false;
+
+                                    }
+                                    _x--;
+                                }
+                            });
+
+                            if(check){
+                                command_ary.splice(command_ary.indexOf("左"),1);
+                            }
+
+                        break;
+                    }
+
+                });
+                
+
+
+                if( Ex.func.Delay(`AItime${ai_name}`,5000,()=>{
+
+                    requestAnimationFrame(()=>{
+                        Ex.func.AI(ai_name,player);
+                    });
+
+                })===false ) return;
+
+                console.log(command_ary);
+                
+
+                var command = command_ary.sort(()=>Math.random()-0.5).pop();
+
+                console.log(command);
+                Ex.func.VoiceAction(player,command);
+                
+
+                requestAnimationFrame(()=>{
+                    Ex.func.AI(ai_name,player);
+                });
             },
-            CheckMove:function(map_info,player,set){
+            CheckMove:function(player,set){
+
+                var map_info = Ex.flag.game.map_info;
 
                 var max = {
                     x:map_info.width/map_info.grid_size,
@@ -193,134 +355,144 @@
 
 
             },
-            VoiceAction:function(map_info,player,voice_word){
+            VoiceAction:function(player,voice_word){
+
+                var map_info = Ex.flag.game.map_info;
+                
 
 
-                if(Ex.flag.VoiceMoveTime!==undefined)
-                if(new Date().getTime() - Ex.flag.VoiceMoveTime<1000){
+                if( Ex.func.Delay(`VoiceAction${player.id}`,500)===false ) return;
 
-                    return;
-                }
-                Ex.flag.VoiceMoveTime = new Date().getTime();
-
-
-
-
-                var x = player.x;
-                var y = player.y;
 
 
 
                 var DB_path = `${Ex.flag.DB_path}/players/${player.id}`;
 
+                var command_ary = [
+                    "開",
+                    "上",
+                    "下",
+                    "右",
+                    "左"
+                ];
+                var command = '';
 
-                if(voice_word.indexOf("開")!==-1){
-                    
-                    var site_set_ary = [
-                        {x:x-1,y:y},
-                        {x:x+1,y:y},
-                        {x:x,y:y-1},
-                        {x:x,y:y+1}
-                    ]
-                    
-                    site_set_ary.forEach(v=>{
 
-                        Ex.DB.ref(`${Ex.flag.DB_path}/site`).push({
-                            x:v.x,
-                            y:v.y,
-                            player:player.id
-                        });
 
-                    });
-                    
-                    Ex.flag.voice.stop();
-                    return;
+                var voice_word_ary = [];
+                for(var i=0;i<voice_word.length;i++){
+                    voice_word_ary.push( voice_word.substr(i,1) );
+                }
+                voice_word_ary.reverse();
+
+                var x = player.x;
+                var y = player.y;
+
+                var max = {
+                    x:map_info.width/map_info.grid_size,
+                    y:map_info.height/map_info.grid_size
                 }
 
 
-                if(voice_word.indexOf("上")!==-1){
-                    
-                    Ex.func.CheckMove(
-                        map_info,
-                        player,
-                        {
+                var check_command_ary = [];
+                voice_word_ary.forEach(v=>{
+                    command_ary.forEach(v2=>{
+                        if(v===v2) check_command_ary.push(v2);
+                    });
+                })
+
+                if(check_command_ary.length===0) return;
+
+
+
+                Ex.flag.command_idx = Ex.flag.command_idx||0;
+
+                if(Ex.flag.command_idx>=check_command_ary.length){
+                    Ex.flag.command_idx = 0;
+                }
+
+                command = check_command_ary[Ex.flag.command_idx];
+
+                Ex.flag.command_idx++;
+
+
+                var set_xy = {
+                    x:x,
+                    y:y
+                }
+                switch (command){
+                    case "開":
+
+                        var site_set_ary = [
+                            {x:x-1,y:y},
+                            {x:x+1,y:y},
+                            {x:x,y:y-1},
+                            {x:x,y:y+1}
+                        ]
+                        
+                        site_set_ary.forEach(v=>{
+
+                            if(v.x<0 || v.y<0 || 
+                                v.x>max.x-1 || v.y>max.y-1) return;
+
+                            var check_site = true;
+                            map_info.site.forEach(site=>{
+
+                                if(site.x===v.x && site.y===v.y) 
+                                    check_site = false;
+
+                            })
+    
+                            if(check_site)
+                            Ex.DB.ref(`${Ex.flag.DB_path}/site`).push({
+                                x:v.x,
+                                y:v.y,
+                                player:player.id
+                            });
+    
+                        });
+
+                    break;
+
+                    case "上":
+                        set_xy = {
                             x:x,
                             y:y-1
                         }
-                    );
+                    break;
 
-                    /*
-                    if(player.y<=0) return;
-
-                    player.y = y-1;*/
-                    Ex.DB.ref(DB_path).update(player);
-
-                    Ex.flag.voice.stop();
-                    return;
-                }
-
-                if(voice_word.indexOf("左")!==-1){
-                    
-                    Ex.func.CheckMove(
-                        map_info,
-                        player,
-                        {
-                            x:x-1,
-                            y:y
-                        }
-                    );
-                    
-                    /*
-                    if(player.x<=0) return;
-
-                    player.x = x-1;*/
-                    Ex.DB.ref(DB_path).update(player);
-
-                    Ex.flag.voice.stop();
-                    return;
-                }
-
-                if(voice_word.indexOf("下")!==-1){
-                    
-                    Ex.func.CheckMove(
-                        map_info,
-                        player,
-                        {
-                            x:x,
-                            y:y+1
-                        }
-                    );
-                    
-                    /*
-                    if(player.y>=max_y) return;
-
-                    player.y = y+1;*/
-                    Ex.DB.ref(DB_path).update(player);
-
-                    Ex.flag.voice.stop();
-                    return;
-                }
-
-                if(voice_word.indexOf("右")!==-1){
-                    
-                    Ex.func.CheckMove(
-                        map_info,
-                        player,
-                        {
+                    case "右":
+                        set_xy = {
                             x:x+1,
                             y:y
                         }
-                    );
+                    break;
+
+                    case "下":
+                        set_xy = {
+                            x:x,
+                            y:y+1
+                        }
+                    break;
+
                     
-                    /*
-                    if(player.x>=max_x) return;
-
-                    player.x = x+1;*/
-                    Ex.DB.ref(DB_path).update(player);
-
-                    Ex.flag.voice.stop();
-                    return;
+                    case "左":
+                        set_xy = {
+                            x:x-1,
+                            y:y
+                        }
+                    break;
                 }
+
+
+                Ex.func.CheckMove(
+                    player,
+                    set_xy
+                );
+                Ex.DB.ref(DB_path).update(player);
+                
+
+                
 
                 
                 
@@ -350,8 +522,11 @@
                 
 
 
+                <div id="point" v-html="point"></div>
+                <br/>
+
                 <button v-for="btn in word_actions" @click="word_action">{{btn}}</button>
-                <BR/>
+                <br/>
 
                 <button v-for="btn in word_actions2" @click="word_action2">{{btn}}</button>
 
@@ -364,7 +539,8 @@
                 return `<div :style="grid_style" :class="site_class">
 
                     
-                
+                {{x}},{{y}}
+
                 <div :class="'player ' + player" :style="player_style" 
                     v-if="player!==''">{{player}}</div>
 
@@ -465,8 +641,7 @@
                                 site:Ex.flag.game.site
                             },
                             players:Ex.flag.game.players,
-                            //record:Ex.func.VoiceRec(),
-                            word_actions:["上","下","右","左","開"],
+                            word_actions:["上","下","右","左","開","右上下右左ABCDEFG開"],
                             word_actions2:["上","下","右","左","開"]
                         }
                     },
@@ -474,25 +649,34 @@
                         word_action:function(e){
 
                             Ex.func.VoiceAction(
-                                this.map_info,
                                 this.players.red,
                                 e.target.innerHTML);
                         },
                         word_action2:function(e){
 
                             Ex.func.VoiceAction(
-                                this.map_info,
                                 this.players.blue,
                                 e.target.innerHTML);
                         }
                     },
                     computed:{
                         style:function(){
-
                             return {
                                 width:`${this.map_info.width}px`,
                                 height:`${this.map_info.height}px`
                             }
+                        },
+                        point:function(){
+
+                            var red = 0,blue = 0;
+
+                            this.map_info.site.forEach(v=>{
+                            
+                                (v.player==="red")?red++:blue++;
+                            
+                            });
+
+                            return `RED：${red}<br />BLUE：${blue}`;
 
                         }
                     },
@@ -502,6 +686,13 @@
                     },
                     mounted:function(){
 
+                        Ex.flag.game.map_info = this.map_info;
+
+
+                        //Ex.func.AI('blue',this.players.blue);
+                        //Ex.func.AI('red',this.players.red);
+
+
                         Ex.DB.ref(Ex.flag.DB_path).on("value",r=>{
 
                             r = r.val();
@@ -510,7 +701,7 @@
                                 location.reload();
                                 return;
                             }
-                            
+
 
                             Object.keys(r.players).forEach(player=>{
 
@@ -521,13 +712,25 @@
                                 this.players[player].y = y;
                                 
 
-                                this.map_info.site.push(
-                                    {
-                                        x:x,
-                                        y:y,
-                                        player:player
+                                var check_site = true;
+                                this.map_info.site.forEach(site=>{
+
+                                    if(site.x===x && site.y===y){
+                                        check_site = false;
                                     }
-                                )
+
+                                });
+
+                                if(check_site){
+                                    this.map_info.site.push(
+                                        {
+                                            x:x,
+                                            y:y,
+                                            player:player
+                                        }
+                                    )
+                                }
+                                
 
                                 var check_site = true;
                                 Object.keys(r.site).forEach(key=>{
@@ -536,11 +739,7 @@
 
                                     if(site.x===x && site.y===y){
 
-                                        if(site.player===player){
-
-                                            check_site = false;
-
-                                        }
+                                        check_site = false;
                                         
                                     }
                                 });
@@ -579,7 +778,6 @@
                                             }
                                             
                                         }
-
                                 });
 
                                 if(check_site){
@@ -592,9 +790,6 @@
                                     )
                                 }
                             });
-
-
-
                             
                         });
 
@@ -602,10 +797,9 @@
                         
 
                         Ex.flag.voice.onend = ()=>{
-                            Ex.flag.voice.start();
+                            //Ex.flag.voice.start();
                         }
                         
-                        //Ex.flag.voice.abort();
 
                         Ex.flag.voice.onresult = (e)=>{
                             
@@ -625,14 +819,13 @@
                             */
 
                             Ex.func.VoiceAction(
-                                this.map_info,
                                 this.players.red,
                                 voice_word);
 
 
                         };
 
-                        Ex.flag.voice.start();
+                        //Ex.flag.voice.start();
 
                             
                     }

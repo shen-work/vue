@@ -62,3 +62,11 @@ input[type="button"]:hover{
     border-color: #00f;
     color:#00f;
 }
+
+div#point{
+    margin: 10px;
+    padding: 10px;
+    font-size: 20px;
+    width: auto;
+    display: flex;
+}
