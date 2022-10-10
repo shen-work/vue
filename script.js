@@ -197,7 +197,7 @@
 
 
                 if(Ex.flag.VoiceMoveTime!==undefined)
-                if(new Date().getTime() - Ex.flag.VoiceMoveTime<500){
+                if(new Date().getTime() - Ex.flag.VoiceMoveTime<1000){
 
                     return;
                 }
@@ -233,7 +233,7 @@
 
                     });
                     
-
+                    Ex.flag.voice.stop();
                     return;
                 }
 
@@ -254,6 +254,8 @@
 
                     player.y = y-1;*/
                     Ex.DB.ref(DB_path).update(player);
+
+                    Ex.flag.voice.stop();
                     return;
                 }
 
@@ -273,6 +275,8 @@
 
                     player.x = x-1;*/
                     Ex.DB.ref(DB_path).update(player);
+
+                    Ex.flag.voice.stop();
                     return;
                 }
 
@@ -292,6 +296,8 @@
 
                     player.y = y+1;*/
                     Ex.DB.ref(DB_path).update(player);
+
+                    Ex.flag.voice.stop();
                     return;
                 }
 
@@ -311,11 +317,12 @@
 
                     player.x = x+1;*/
                     Ex.DB.ref(DB_path).update(player);
+
+                    Ex.flag.voice.stop();
                     return;
                 }
 
                 
-                Ex.flag.voice.stop();
                 
             }
 
