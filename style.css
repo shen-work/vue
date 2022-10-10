@@ -36,16 +36,29 @@ input[type="button"]:hover{
     display: inline-block;
 }
 
-#Map .player{
-    position: absolute;
-    margin: 4px;
-    border: 1px solid #fff;
-}
-
-#Map .player.red{
+#Map>div.red{
     background: #f00;
 }
 
-#Map .player.blue{
+#Map>div.blue{
     background: #00f;
+}
+
+#Map .player{
+    position: absolute;
+    margin: 3px;
+    border: 1px solid #000;
+    border-radius: 10px;
+    background: #fff;
+    
+}
+
+#Map .player.red{
+    border-color: #f00;
+    color: #f00;
+}
+
+#Map .player.blue{
+    border-color: #00f;
+    color:#00f;
 }

@@ -107,7 +107,7 @@
 
                 return str;
             },
-            VoiceRec:(func)=>{
+            VoiceRec:()=>{
 
                 var record = new webkitSpeechRecognition()
 
@@ -150,8 +150,7 @@
                 player.x = x;
                 player.y = y;
             },
-            VoiceMove:function(red,voice_word){
-
+            VoiceAction:function(map_info,player,voice_word){
 
 
                 if(Ex.flag.VoiceMoveTime!==undefined)
@@ -162,21 +161,77 @@
                 Ex.flag.VoiceMoveTime = new Date().getTime();
 
 
+                var x = player.x;
+                var y = player.y;
+
+                var max_x = map_info.width/map_info.grid_size;
+                var max_y = map_info.height/map_info.grid_size;
+
+
+                var DB_path = `${Ex.flag.DB_path}/players/${player.id}`;
+
+
+                if(voice_word.indexOf("開")!==-1){
+                    
+                    var site_set_ary = [
+                        {x:x-1,y:y},
+                        {x:x+1,y:y},
+                        {x:x,y:y-1},
+                        {x:x,y:y+1}
+                    ]
+                    
+                    site_set_ary.forEach(v=>{
+
+                        Ex.DB.ref(`${Ex.flag.DB_path}/site`).push({
+                            x:v.x,
+                            y:v.y,
+                            player:player.id
+                        });
+
+                    });
+                    
+
+                    return;
+                }
+
+
                 if(voice_word.indexOf("上")!==-1){
-                    red.y-=1;
-                }
+                    
+                    if(player.y<=0) return;
 
-                if(voice_word.indexOf("下")!==-1){
-                    red.y+=1;
-                }
-
-                if(voice_word.indexOf("右")!==-1){
-                    red.x+=1;
+                    player.y = y-1;
+                    Ex.DB.ref(DB_path).update(player);
+                    return;
                 }
 
                 if(voice_word.indexOf("左")!==-1){
-                    red.x-=1;
+                    
+                    if(player.x<=0) return;
+
+                    player.x = x-1;
+                    Ex.DB.ref(DB_path).update(player);
+                    return;
                 }
+
+                if(voice_word.indexOf("下")!==-1){
+                    
+                    if(player.y>=max_y) return;
+
+                    player.y = y+1;
+                    Ex.DB.ref(DB_path).update(player);
+                    return;
+                }
+
+                if(voice_word.indexOf("右")!==-1){
+                    
+                    if(player.x>=max_x) return;
+
+                    player.x = x+1;
+                    Ex.DB.ref(DB_path).update(player);
+                    return;
+                }
+
+                
 
             }
 
@@ -196,12 +251,18 @@
             },
 
             Map:()=>{
-                return `<div id="Map" :style="{'width':map_info.width+'px','height':map_info.height+'px'}">
+                return `<div id="Map" :style="style">
+
+                
                 
                 <Grid v-for="(page,key) in map_info.grids" :num="key" :map_info="map_info" :players="players" />
                 
 
-                <button @click="move">click</button>
+
+                <button v-for="btn in word_actions" @click="word_action">{{btn}}</button>
+                <BR/>
+
+                <button v-for="btn in word_actions2" @click="word_action2">{{btn}}</button>
 
                 </div>`
             },
@@ -209,19 +270,12 @@
 
             Grid:()=>{
 
-                return `<div :style="{
-                    'width':map_info.grid_size-2+'px',
-                    'height':map_info.grid_size-2+'px'}" 
-                    :x="x" :y="y">
+                return `<div :style="grid_style" :class="site_class">
+
+                    
                 
-                <div class="player red" :style="{
-                    'width':map_info.grid_size-10+'px',
-                    'height':map_info.grid_size-10+'px'}" 
-                    v-if="x===players.red.x && y===players.red.y">red</div>
-                
-                <div class="player blue" :style="{
-                    'width':map_info.grid_size-10+'px',
-                    'height':map_info.grid_size-10+'px'}" v-if="x===players.blue.x && y===players.blue.y">blue</div>
+                <div :class="'player ' + player" :style="player_style" 
+                    v-if="player!==''">{{player}}</div>
 
                 
                 </div>`;
@@ -240,157 +294,287 @@
 
             document.addEventListener("click",Ex.func.ClickEvent);
 
-            Ex.flag.players = Ex.flag.players||{
-                red:{
-                    x:0,y:0
-                },
-                blue:{
-                    x:9,y:9
-                }
-            }
+            Ex.flag.game_id = 0;//new Date().getTime();
+            Ex.flag.DB_path  =`game/${Ex.flag.game_id}`;
 
-            Ex.vue = Vue.createApp({
-                template:Ex.temp.body(),
-                data(){
-                    return{
-                        
-                    }
-                },
-                computed:{},
-                methods:{}
-            });
+            Ex.DB.ref(Ex.flag.DB_path).once("value",r=>{
 
+                Ex.flag.game = r.val()||{};
 
-            Ex.vue.component("Map",{
-                name:"Map",
-                template:Ex.temp.Map(),
-                data(){
-                    return{
-                        map_info:{
-                            grid_size:50,
-                            grids:100,
-                            height:500,
-                            width:500
-                        },
-                        players:Ex.flag.players,
-                        record:Ex.func.VoiceRec()
-                    }
-                },
-                methods:{
-                    move:function(){
-
-                        var red = this.players.red
-                        var blue = this.players.blue;
-                        var max_x = this.map_info.width/this.map_info.grid_size;
-                        var max_y = this.map_info.height/this.map_info.grid_size;
-
-                        Ex.func.RandMove(red,max_x,max_y);
-
-                        Ex.func.RandMove(blue,max_x,max_y);
-
-
-                        if(this.players.red.x===this.players.blue.x && this.players.red.y===this.players.blue.y) 
-                        {
-                            cancelAnimationFrame(this.timer);
-                            return;
-                        }
-
-                        this.timer = requestAnimationFrame(this.move);
-                    }
-                },
-                mounted:function(){
-
-                    Ex.DB.ref("red").on("value",r=>{
-
-                        r = r.val();
-
-                        this.players.red.x = r.x;
-                        this.players.red.y = r.y;
-                    
-                    });
-                    
-                    //this.move();
-
-                    this.record.onresult = (e)=>{
-                        console.log(e);
-                        
-                        var voice_word = e.results[e.results.length-1][0].transcript
-                        ;
-
-                        /*
-                        Object.values(e.results).forEach(r => {
-                            
-                            var voice_word = r[0].transcript;
-                            
-
-                        });
-                        */
-
-                        var red = this.players.red;
-
-
-                        Ex.func.VoiceMove(red,voice_word);
-
-                        /*
-                        if(voice_word.indexOf("上",Ex.flag.voice_word_index)!==-1){
-                            Ex.flag.voice_word_index = voice_word.indexOf("上",Ex.flag.voice_word_index)+1;
-                            red.y-=1;
-                            _move = true;
-                        }
-
-                        if(voice_word.indexOf("下",Ex.flag.voice_word_index)!==-1){
-                            Ex.flag.voice_word_index = voice_word.indexOf("下",Ex.flag.voice_word_index)+1;
-                            red.y+=1;
-                            _move = true;
-                        }
-
-                        if(voice_word.indexOf("右",Ex.flag.voice_word_index)!==-1){
-                            Ex.flag.voice_word_index = voice_word.indexOf("右",Ex.flag.voice_word_index)+1;
-                            red.x+=1;
-                            _move = true;
-                        }
-
-                        if(voice_word.indexOf("左",Ex.flag.voice_word_index)!==-1){
-                            Ex.flag.voice_word_index = voice_word.indexOf("左",Ex.flag.voice_word_index)+1;
-                            red.x-=1;
-                            _move = true;
-                        }
-
-                        if(!_move) Ex.flag.voice_word_index = 0;
-                        */
-
-                    };
-
-                    this.record.start();
-
-                        
-                }
+                Ex.flag.game.players = Ex.flag.game.players||{};
+    
+                Ex.flag.game.players.red = Ex.flag.game.players.red||{
+                    id:"red",
+                    x:0,
+                    y:0};
+                Ex.flag.game.players.blue = Ex.flag.game.players.blue||{
+                    id:"blue",
+                    x:9,
+                    y:9};
                 
-            })
 
-            Ex.vue.component("Grid",{
-                name:"Grid",
-                template:Ex.temp.Grid(),
-                props:["num","map_info","players"],
-                data(){
-                    return{
-                        
-                    }
-                },
-                computed:{
-                    x:function(){
-                        return this.num%10;
+                Ex.flag.game.site = Object.values(Ex.flag.game.site||{})||[];
+
+
+                Object.keys(Ex.flag.game.players).forEach(player=>{
+
+                    Ex.flag.game.site.push({
+
+                        x:Ex.flag.game.players[player].x,
+                        y:Ex.flag.game.players[player].y,
+                        player:player
+                    })
+
+                });
+                
+
+                Ex.DB.ref(Ex.flag.DB_path).update(Ex.flag.game);
+    
+            
+            }).then(()=>{
+
+                Ex.vue = Vue.createApp({
+                    template:Ex.temp.body(),
+                    data(){
+                        return{
+                            
+                        }
                     },
-                    y:function(){
-                        return Math.floor(this.num/10);                        
+                    computed:{},
+                    methods:{}
+                });
+
+
+                Ex.vue.component("Map",{
+                    name:"Map",
+                    template:Ex.temp.Map(),
+                    data(){
+                        return{
+                            map_info:{
+                                grid_size:50,
+                                grids:100,
+                                height:500,
+                                width:500,
+                                site:Ex.flag.game.site
+                            },
+                            players:Ex.flag.game.players,
+                            record:Ex.func.VoiceRec(),
+                            word_actions:["上","下","右","左","開"],
+                            word_actions2:["上","下","右","左","開"]
+                        }
+                    },
+                    methods:{
+                        word_action:function(e){
+
+                            Ex.func.VoiceAction(
+                                this.map_info,
+                                this.players.red,
+                                e.target.innerHTML);
+                        },
+                        word_action2:function(e){
+
+                            Ex.func.VoiceAction(
+                                this.map_info,
+                                this.players.blue,
+                                e.target.innerHTML);
+                        }
+                    },
+                    computed:{
+                        style:function(){
+
+                            return {
+                                width:`${this.map_info.width}px`,
+                                height:`${this.map_info.height}px`
+                            }
+
+                        }
+                    },
+                    created:function(){
+
+                        
+                    },
+                    mounted:function(){
+
+                        Ex.DB.ref(Ex.flag.DB_path).on("value",r=>{
+
+                            r = r.val();
+
+                            if(r===null){
+                                location.reload();
+                                return;
+                            }
+                            
+
+                            Object.keys(r.players).forEach(player=>{
+
+                                var x = r.players[player].x;
+                                var y = r.players[player].y;
+
+                                this.players[player].x = x;
+                                this.players[player].y = y;
+                                
+
+                                this.map_info.site.push(
+                                    {
+                                        x:x,
+                                        y:y,
+                                        player:player
+                                    }
+                                )
+
+                                var check_site = true;
+                                Object.values(r.site).forEach(site=>{
+
+                                    if(site.x===x && 
+                                        site.y===y && 
+                                        site.player===player){
+
+                                            check_site = false;
+                                        }
+                                });
+
+
+                                
+                                if(check_site){
+
+
+                                    Ex.DB.ref(`${Ex.flag.DB_path}/site`).push({
+                                        x:x,
+                                        y:y,
+                                        player:player
+                                    })
+                                }
+                            });
+
+                            Object.values(r.site).forEach(db=>{
+
+                                var check_site = true;
+                                this.map_info.site.forEach(local=>{
+                                    
+                                    if(db.x===local.x && 
+                                        db.y===local.y && 
+                                        db.player===local.player){
+
+                                            check_site = false;
+                                        }
+
+                                });
+
+                                if(check_site){
+                                    this.map_info.site.push(
+                                        {
+                                            x:db.x,
+                                            y:db.y,
+                                            player:db.player
+                                        }
+                                    )
+                                }
+                            });
+
+
+
+                            
+                        });
+                        
+
+                        this.record.onresult = (e)=>{
+                            
+                            
+                            var voice_word = e.results[e.results.length-1][0].transcript
+                            ;
+
+                            /*
+                            Object.values(e.results).forEach(r => {
+                                
+                                var voice_word = r[0].transcript;
+
+                            });
+                            */
+
+                            var red = this.players.red;
+
+
+                            Ex.func.VoiceAction(
+                                this.map_info,
+                                this.players.red,
+                                voice_word);
+
+
+                        };
+
+                        //this.record.start();
+
+                            
                     }
-                }
-            })
+                    
+                })
+
+                Ex.vue.component("Grid",{
+                    name:"Grid",
+                    template:Ex.temp.Grid(),
+                    props:["num","map_info","players"],
+                    data(){
+                        return{
+                            
+                        }
+                    },
+                    computed:{
+                        grid_style:function(){
+                            
+                            return {
+                                width:`${this.map_info.grid_size-2}px`,
+                                height:`${this.map_info.grid_size-2}px`
+                            }
+                        },
+                        player_style:function(){
+
+                            return {
+                                width:`${this.map_info.grid_size-10}px`,
+                                height:`${this.map_info.grid_size-10}px`
+                            }
+                        },
+                        player(){
+
+                            var _return = '';
+                            Object.keys(this.players).forEach(player=>{
+
+                                if(this.players[player].x===this.x && 
+                                    this.players[player].y===this.y){
+
+                                        _return = player;
+                                    }
+
+                            });
+
+                            return _return;
+
+                        },
+                        x:function(){
+                            return this.num%10;
+                        },
+                        y:function(){
+                            return Math.floor(this.num/10);                        
+                        },
+                        site_class:function(){
+
+                            var _return = '';
+                            this.map_info.site.forEach(site=>{
+                                if(site.x===this.x && site.y===this.y)
+                                {
+                                    _return = site.player;
+                                }
+                            })
+
+                            return _return;
+
+                        }
+                    }
+                })
 
 
-            Ex.vue.mount("body");
+                Ex.vue.mount("body");
 
-
+            });
             return;
 
 
@@ -458,7 +642,10 @@
 
     window.onload = ()=>{
         
+
         Ex.init();
+
+        
         
     }
 
