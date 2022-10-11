@@ -389,7 +389,7 @@ Ex.flag.game.site.sort((a,b)=>{
                 var map_info = Ex.flag.game.map_info;
                 
 
-                if(player.AI===undefined)
+                if(player.AI===undefined && Ex.flag.game.mode==="voice")
                     document.querySelector("#VoiceWord").innerHTML = `
                     語音辯識文字：${voice_word}`;
 
@@ -650,7 +650,7 @@ Ex.flag.game.site.sort((a,b)=>{
 
                     
 
-                    <div v-if="game_info.mode==='voice'">
+                    <div v-if="game_info.mode!=='voice'">
 
                         <button v-for="btn in word_actions" @click="word_action">{{btn}}</button>
 
@@ -863,7 +863,7 @@ Ex.flag.game.site.sort((a,b)=>{
 
                         Ex.DB.ref(Ex.flag.DB_path).on("value",r=>{
 
-                            console.log(r);
+
 
                             if(Ex.flag.game.game_over){
                                 Ex.DB.ref(Ex.flag.DB_path).off();
@@ -877,9 +877,9 @@ Ex.flag.game.site.sort((a,b)=>{
                                 return;
                             }
 
+                            Ex.flag.game.mode = r.mode;
                             this.game_info.mode = r.mode;
 
-                            console.log(r.mode);
 
 
                             Object.keys(r.players).forEach(player=>{
