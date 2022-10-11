@@ -650,7 +650,7 @@ Ex.flag.game.site.sort((a,b)=>{
 
                     
 
-                    <div v-if="game_info.mode!=='voice'">
+                    <div id="Mute" v-if="game_info.mode!=='voice'">
 
                         <button v-for="btn in word_actions" @click="word_action">{{btn}}</button>
 
@@ -724,6 +724,7 @@ Ex.flag.game.site.sort((a,b)=>{
                     y:9};
                 
 
+                Ex.flag.game.mode = Ex.flag.game.mode||"voice";
                 Ex.flag.game.site = Object.values(Ex.flag.game.site||{})||[];
 
 
@@ -803,7 +804,7 @@ Ex.flag.game.site.sort((a,b)=>{
                         },
                         GameModeSet:function(e){
 
-                            this.game_info.mode = (this.game_info.mode==="voice")?"no":"voice";
+                            this.game_info.mode = (this.game_info.mode==="voice")?"mute":"voice";
 
                             Ex.DB.ref(`${Ex.flag.DB_path}/mode`).set(this.game_info.mode);
 
@@ -1010,7 +1011,7 @@ Ex.flag.game.site.sort((a,b)=>{
 
                         };
 
-                        Ex.flag.voice.start();
+                        if(Ex.flag.game.mode==="voice") Ex.flag.voice.start();
 
                             
                     }
