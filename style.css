@@ -6,10 +6,10 @@ body{
     text-align: center;
 }
 
-input[type="button"]{
+button{
     cursor: pointer;
 }
-input[type="button"]:hover{
+button:hover{
     background: #00f;
     color: #fff;
 }
@@ -63,7 +63,7 @@ input[type="button"]:hover{
     color:#00f;
 }
 
-div#point{
+div#Point{
     text-align: left;
     margin: 10px;
     padding: 10px;
@@ -73,6 +73,15 @@ div#point{
 }
 
 div#VoiceWord{
+    text-align: left;
+    margin: 0px 10px 0px 10px;
+    padding: 10px;
+    font-size: 20px;
+    width: auto;
+    display: flex;
+}
+
+div#Menu{
     text-align: left;
     margin: 0px 10px 0px 10px;
     padding: 10px;

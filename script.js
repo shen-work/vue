@@ -389,7 +389,7 @@ Ex.flag.game.site.sort((a,b)=>{
                 var map_info = Ex.flag.game.map_info;
                 
 
-                if(player.AI!==undefined)
+                if(player.AI===undefined)
                     document.querySelector("#VoiceWord").innerHTML = `
                     語音辯識文字：${voice_word}`;
 
@@ -616,6 +616,13 @@ Ex.flag.game.site.sort((a,b)=>{
             },
 
             Map:()=>{
+
+                /*
+                
+
+                */
+
+
                 return `<div id="Map" :style="style">
 
                 
@@ -624,14 +631,26 @@ Ex.flag.game.site.sort((a,b)=>{
                 
 
 
-                <div id="point" v-html="point"></div><br />
+                <div id="Point" v-html="point"></div><br />
                 <div id="VoiceWord"></div>
                 <br/>
+
+
+                <div id="Menu">
+                <button @click="PVE">單機遊戲開始</button>
+                <button @click="PVP">加入遊戲</button>
+                <button @click="RESET">初始化</button>
+
+                <input type="text" placeholder="遊戲ID" v-model="game_id">
+
+                </div>
 
                 <button v-for="btn in word_actions" @click="word_action">{{btn}}</button>
                 <br/>
 
                 <button v-for="btn in word_actions2" @click="word_action2">{{btn}}</button>
+
+                
 
                 </div>`
             },
@@ -666,8 +685,15 @@ Ex.flag.game.site.sort((a,b)=>{
 
             document.addEventListener("click",Ex.func.ClickEvent);
 
-            Ex.flag.game_id = 0;//new Date().getTime();
-            Ex.flag.DB_path  =`game/${Ex.flag.game_id}`;
+
+            Ex.flag.storage.game_id = Ex.flag.storage.game_id||parseInt((new Date().getTime().toString().substr(7))).toString(36);
+            Ex.flag.storage.player = Ex.flag.storage.player||"red";
+
+            Ex.func.StorageUpd();
+
+            
+
+            Ex.flag.DB_path  =`game/${Ex.flag.storage.game_id}`;
 
             Ex.DB.ref(Ex.flag.DB_path).once("value",r=>{
 
@@ -745,9 +771,10 @@ Ex.flag.game.site.sort((a,b)=>{
                                 width:500,
                                 site:Ex.flag.game.site
                             },
-                            players:Ex.flag.game.players,/*
+                            players:Ex.flag.game.players,
+                            game_id:Ex.flag.storage.game_id,
                             word_actions:["上","下","右","左","攻擊"],
-                            word_actions2:["上","下","右","左","攻擊"]*/
+                            word_actions2:["上","下","右","左","攻擊"]
                         }
                     },
                     methods:{
@@ -762,6 +789,23 @@ Ex.flag.game.site.sort((a,b)=>{
                             Ex.func.VoiceAction(
                                 this.players.blue,
                                 e.target.innerHTML);
+                        },
+                        PVE:function(e){
+                            Ex.func.AI('blue',this.players.blue);
+                        },
+                        PVP:function(e){
+
+                            Ex.flag.storage.game_id = this.game_id;
+                            Ex.flag.storage.player = "blue";
+                            Ex.func.StorageUpd();
+                            setTimeout(()=>{location.reload();},0);
+
+                        },
+                        RESET:function(e){
+                            Ex.flag.storage = {};
+                            Ex.func.StorageUpd();
+                            setTimeout(()=>{location.reload();},0);
+
                         }
                     },
                     computed:{
@@ -781,7 +825,8 @@ Ex.flag.game.site.sort((a,b)=>{
                             
                             });
 
-                            return `RED：${red}<br />BLUE：${blue}`;
+
+                            return `你是${Ex.flag.storage.player.toLocaleUpperCase()}<br />RED：${red}<br />BLUE：${blue}`;
 
                         }
                     },
@@ -794,7 +839,7 @@ Ex.flag.game.site.sort((a,b)=>{
                         Ex.flag.game.map_info = this.map_info;
 
 
-                        Ex.func.AI('blue',this.players.blue);
+                        //Ex.func.AI('blue',this.players.blue);
                         //Ex.func.AI('red',this.players.red);
 
 
@@ -913,6 +958,8 @@ Ex.flag.game.site.sort((a,b)=>{
 
                         Ex.flag.voice.onend = ()=>{
                             //console.log("voice END")
+                            if(Ex.flag.game.game_over) return;
+                            
                             Ex.flag.voice.start();
                         }
                         
@@ -933,13 +980,13 @@ Ex.flag.game.site.sort((a,b)=>{
                             */
 
                             Ex.func.VoiceAction(
-                                this.players.red,
+                                this.players[Ex.flag.storage.player],
                                 voice_word);
 
 
                         };
 
-                        //Ex.flag.voice.start();
+                        Ex.flag.voice.start();
 
                             
                     }
