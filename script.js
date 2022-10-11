@@ -324,7 +324,7 @@ Ex.flag.game.site.sort((a,b)=>{
                 
 
 
-                if( Ex.func.Delay(`AItime${ai_name}`,1000 * 0.5,()=>{
+                if( Ex.func.Delay(`AItime${ai_name}`,1000 * 2,()=>{
 
                     requestAnimationFrame(()=>{
                         Ex.func.AI(ai_name,player);
@@ -631,24 +631,37 @@ Ex.flag.game.site.sort((a,b)=>{
                 
 
 
-                <div id="Point" v-html="point"></div><br />
-                <div id="VoiceWord"></div>
-                <br/>
 
 
                 <div id="Menu">
-                <button @click="PVE">單機遊戲開始</button>
-                <button @click="PVP">加入遊戲</button>
-                <button @click="RESET">初始化</button>
 
-                <input type="text" placeholder="遊戲ID" v-model="game_id">
+                    <div v-html="point"></div>
 
+                    <div id="VoiceWord"></div>
+
+
+                    <div>
+                    <button @click="PVE">單機遊戲開始</button>
+                    <button @click="PVP">加入遊戲</button>
+                    <button @click="RESET">初始化</button>
+
+                    <input type="text" placeholder="遊戲ID" v-model="game_info.id">
+                    </div>
+
+                    
+
+                    <div v-if="game_info.mode==='voice'">
+
+                        <button v-for="btn in word_actions" @click="word_action">{{btn}}</button>
+
+                        
+                    </div>
+
+                    <div v-if="player==='red'">
+                    遊戲模式：<button @click="GameModeSet">{{(game_info.mode==='voice')?'聲控':'非聲控'}}</button>
+                    </div>
+                    
                 </div>
-
-                <button v-for="btn in word_actions" @click="word_action">{{btn}}</button>
-                <br/>
-
-                <button v-for="btn in word_actions2" @click="word_action2">{{btn}}</button>
 
                 
 
@@ -686,7 +699,7 @@ Ex.flag.game.site.sort((a,b)=>{
             document.addEventListener("click",Ex.func.ClickEvent);
 
 
-            Ex.flag.storage.game_id = Ex.flag.storage.game_id||parseInt((new Date().getTime().toString().substr(7))).toString(36);
+            Ex.flag.storage.game_id = Ex.flag.storage.game_id||parseInt((new Date().getTime().toString().substr(6))).toString(36);
             Ex.flag.storage.player = Ex.flag.storage.player||"red";
 
             Ex.func.StorageUpd();
@@ -771,31 +784,36 @@ Ex.flag.game.site.sort((a,b)=>{
                                 width:500,
                                 site:Ex.flag.game.site
                             },
+                            game_info:{
+                                id:Ex.flag.storage.game_id,
+                                mode:"voice"
+                            },
+                            player:Ex.flag.storage.player,
                             players:Ex.flag.game.players,
-                            game_id:Ex.flag.storage.game_id,
                             word_actions:["上","下","右","左","攻擊"],
-                            word_actions2:["上","下","右","左","攻擊"]
+                           
                         }
                     },
                     methods:{
                         word_action:function(e){
 
                             Ex.func.VoiceAction(
-                                this.players.red,
+                                this.players[Ex.flag.storage.player],
                                 e.target.innerHTML);
                         },
-                        word_action2:function(e){
+                        GameModeSet:function(e){
 
-                            Ex.func.VoiceAction(
-                                this.players.blue,
-                                e.target.innerHTML);
+                            this.game_info.mode = (this.game_info.mode==="voice")?"no":"voice";
+
+                            Ex.DB.ref(`${Ex.flag.DB_path}/mode`).set(this.game_info.mode);
+
                         },
                         PVE:function(e){
                             Ex.func.AI('blue',this.players.blue);
                         },
                         PVP:function(e){
 
-                            Ex.flag.storage.game_id = this.game_id;
+                            Ex.flag.storage.game_id = this.game_info.id;
                             Ex.flag.storage.player = "blue";
                             Ex.func.StorageUpd();
                             setTimeout(()=>{location.reload();},0);
@@ -845,6 +863,7 @@ Ex.flag.game.site.sort((a,b)=>{
 
                         Ex.DB.ref(Ex.flag.DB_path).on("value",r=>{
 
+                            console.log(r);
 
                             if(Ex.flag.game.game_over){
                                 Ex.DB.ref(Ex.flag.DB_path).off();
@@ -857,6 +876,11 @@ Ex.flag.game.site.sort((a,b)=>{
                                 location.reload();
                                 return;
                             }
+
+                            this.game_info.mode = r.mode;
+
+                            console.log(r.mode);
+
 
                             Object.keys(r.players).forEach(player=>{
 
@@ -959,7 +983,7 @@ Ex.flag.game.site.sort((a,b)=>{
                         Ex.flag.voice.onend = ()=>{
                             //console.log("voice END")
                             if(Ex.flag.game.game_over) return;
-                            
+
                             Ex.flag.voice.start();
                         }
                         
@@ -1025,7 +1049,7 @@ Ex.flag.game.site.sort((a,b)=>{
                                 if(this.players[player].x===this.x && 
                                     this.players[player].y===this.y){
 
-                                        _return = player;
+                                        _return = player.toLocaleUpperCase();
                                     }
 
                             });

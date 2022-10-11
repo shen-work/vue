@@ -9,7 +9,7 @@ body{
 button{
     cursor: pointer;
 }
-button:hover{
+button:not([disabled]):hover{
     background: #00f;
     color: #fff;
 }
@@ -50,6 +50,7 @@ button:hover{
     border: 1px solid #000;
     border-radius: 10px;
     background: #fff;
+    font-size: 8px;
     
 }
 
@@ -63,7 +64,16 @@ button:hover{
     color:#00f;
 }
 
-div#Point{
+
+div#Menu{
+    width: 90%;
+    margin-top: 10px;
+}
+
+div#Menu>div{
+
+    border: 1px solid #fff;
+    background: #555;
     text-align: left;
     margin: 10px;
     padding: 10px;
@@ -72,20 +82,3 @@ div#Point{
     display: flex;
 }
 
-div#VoiceWord{
-    text-align: left;
-    margin: 0px 10px 0px 10px;
-    padding: 10px;
-    font-size: 20px;
-    width: auto;
-    display: flex;
-}
-
-div#Menu{
-    text-align: left;
-    margin: 0px 10px 0px 10px;
-    padding: 10px;
-    font-size: 20px;
-    width: auto;
-    display: flex;
-}
