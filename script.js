@@ -140,9 +140,10 @@ Ex.flag.game.site.sort((a,b)=>{
             },
             VoiceRec:()=>{
 
+                var record;
                 try{
 
-                    var record = new webkitSpeechRecognition();
+                    record = new webkitSpeechRecognition();
 
                 }catch(e){
 
@@ -151,7 +152,7 @@ Ex.flag.game.site.sort((a,b)=>{
                 }
 
                 record.continuous = true;
-                record.interimResults = true;
+                record.interimResults = false;
                 record.lang = "cmn-Hant-TW";//"ja-JP";
                 /*
                 record.onresult=function(e){
@@ -172,6 +173,11 @@ Ex.flag.game.site.sort((a,b)=>{
             },
             AI:function(ai_name,player){
 
+                if(Ex.flag.game.game_over) return;
+
+
+                player.AI = ai_name;
+
 
                 var map_info = Ex.flag.game.map_info;
 
@@ -182,12 +188,13 @@ Ex.flag.game.site.sort((a,b)=>{
 
                 
                 var command_ary = [
-                    //"開",
+                    "攻擊",
                     "上",
                     "下",
                     "右",
                     "左"
                 ];
+                
 
           
                 if(player.x>=max.x-1) command_ary.splice(command_ary.indexOf("右"),1);
@@ -198,30 +205,36 @@ Ex.flag.game.site.sort((a,b)=>{
 
 
             
-
+                var command_ary_tmp = Array.from(command_ary);;
                 var check;
+                var site_search;
+                
+                
+                
                 command_ary.forEach(c=>{
+
+                    var _x = player.x;
+                    var _y = player.y;
+
 
                     switch (c){
 
                         case "上":
 
-                            Ex.flag.game.site.forEach(site=>{
+                            
+                            check = true;
+                            while(_y>=0){
 
-                                var _y = player.y;
-                                while(_y>=0){
+                                site_search = Ex.flag.game.site.filter(site=>site.x===player.x && site.y===_y);
 
-                                    check = true;
-                                    if(site.x===player.x && site.y!==_y){
-                                        check = false;
+                                if(site_search.length===0) check = false
 
-                                    }
-                                    _y--;
-                                }
-                            });
+                                _y--;
+                            }
 
                             if(check){
-                                command_ary.splice(command_ary.indexOf("上"),1);
+                                
+                                command_ary_tmp.splice(command_ary_tmp.indexOf(c),1);
                             }
 
 
@@ -229,22 +242,21 @@ Ex.flag.game.site.sort((a,b)=>{
                         break;
                         case "下":
                             
-                            Ex.flag.game.site.forEach(site=>{
+                            check = true;
+                            while(_y<=max.y-1){
 
-                                var _y = player.y;
-                                while(_y<=max.y-1){
+                                
 
-                                    check = true;
-                                    if(site.x===player.x && site.y!==_y){
-                                        check = false;
+                                site_search = Ex.flag.game.site.filter(site=>site.x===player.x && site.y===_y);
 
-                                    }
-                                    _y++;
-                                }
-                            });
+
+                                if(site_search.length===0) check = false
+
+                                _y++;
+                            }
 
                             if(check){
-                                command_ary.splice(command_ary.indexOf("下"),1);
+                                command_ary_tmp.splice(command_ary_tmp.indexOf(c),1);
                             }
 
 
@@ -252,53 +264,67 @@ Ex.flag.game.site.sort((a,b)=>{
                         case "右":
                             
                         
-                            Ex.flag.game.site.forEach(site=>{
+                            check = true;
+                            while(_x<=max.x-1){
 
-                                var _x = player.x;
-                                while(_x<=max.x-1){
 
-                                    check = true;
-                                    if(site.x!==_x && site.y===player.y){
-                                        check = false;
+                                site_search = Ex.flag.game.site.filter(site=>site.x===_x && site.y===player.y);
 
-                                    }
-                                    _x++;
-                                }
-                            });
+                                if(site_search.length===0) check = false
+
+                                _x++;
+                            }
 
                             if(check){
-                                command_ary.splice(command_ary.indexOf("右"),1);
+                                command_ary_tmp.splice(command_ary_tmp.indexOf(c),1);
                             }
 
                         break;
                         case "左":
                             
-                            Ex.flag.game.site.forEach(site=>{
+                            check = true;
+                            while(_x>=0){
 
-                                var _x = player.x;
-                                while(_x>=0){
 
-                                    check = true;
-                                    if(site.x!==_x && site.y===player.y){
-                                        check = false;
+                                site_search = Ex.flag.game.site.filter(site=>site.x===_x && site.y===player.y);
 
-                                    }
-                                    _x--;
-                                }
-                            });
+                                if(site_search.length===0) check = false
+
+                                _x--;
+                            }
 
                             if(check){
-                                command_ary.splice(command_ary.indexOf("左"),1);
+                                command_ary_tmp.splice(command_ary_tmp.indexOf(c),1);
                             }
 
                         break;
                     }
 
                 });
+
+                command_ary = command_ary_tmp;
+
+
+
+
+                //console.log(player.x,player.y);
+                //console.log(command_ary);
+
+                if(command_ary.length===1){
+                    command_ary = [
+                        "攻擊",
+                        "上",
+                        "下",
+                        "右",
+                        "左"
+                    ];
+                }
+
+                
                 
 
 
-                if( Ex.func.Delay(`AItime${ai_name}`,5000,()=>{
+                if( Ex.func.Delay(`AItime${ai_name}`,1000 * 0.5,()=>{
 
                     requestAnimationFrame(()=>{
                         Ex.func.AI(ai_name,player);
@@ -306,12 +332,13 @@ Ex.flag.game.site.sort((a,b)=>{
 
                 })===false ) return;
 
-                console.log(command_ary);
+                
+                
                 
 
                 var command = command_ary.sort(()=>Math.random()-0.5).pop();
 
-                console.log(command);
+                
                 Ex.func.VoiceAction(player,command);
                 
 
@@ -357,19 +384,23 @@ Ex.flag.game.site.sort((a,b)=>{
             },
             VoiceAction:function(player,voice_word){
 
+                if(Ex.flag.game.game_over) return;
+
                 var map_info = Ex.flag.game.map_info;
                 
 
+                if(player.AI!==undefined)
+                    document.querySelector("#VoiceWord").innerHTML = `
+                    語音辯識文字：${voice_word}`;
 
-                if( Ex.func.Delay(`VoiceAction${player.id}`,500)===false ) return;
+                //if( Ex.func.Delay(`VoiceAction${player.id}`,500)===false ) return;
 
-
-
+                console.log(voice_word);
 
                 var DB_path = `${Ex.flag.DB_path}/players/${player.id}`;
-
+               
                 var command_ary = [
-                    "開",
+                    "攻擊",
                     "上",
                     "下",
                     "右",
@@ -377,13 +408,16 @@ Ex.flag.game.site.sort((a,b)=>{
                 ];
                 var command = '';
 
+                command_ary.forEach(word=>{
 
+                    command = (voice_word.indexOf(word)!==-1)?word:command;
 
-                var voice_word_ary = [];
-                for(var i=0;i<voice_word.length;i++){
-                    voice_word_ary.push( voice_word.substr(i,1) );
-                }
-                voice_word_ary.reverse();
+                });
+
+                console.log(command);
+
+                if(command==='') return;
+
 
                 var x = player.x;
                 var y = player.y;
@@ -393,6 +427,15 @@ Ex.flag.game.site.sort((a,b)=>{
                     y:map_info.height/map_info.grid_size
                 }
 
+
+                /*
+                var voice_word_ary = [];
+                for(var i=0;i<voice_word.length;i++){
+                    voice_word_ary.push( voice_word.substr(i,1) );
+                }
+                voice_word_ary.reverse();
+
+                
 
                 var check_command_ary = [];
                 voice_word_ary.forEach(v=>{
@@ -414,16 +457,26 @@ Ex.flag.game.site.sort((a,b)=>{
                 command = check_command_ary[Ex.flag.command_idx];
 
                 Ex.flag.command_idx++;
+                */
 
+
+                /*
+                console.log(voice_word);
+                console.log(check_command_ary);
+                console.log(Ex.flag.command_idx);
+                console.log(command);
+                */
+                
 
                 var set_xy = {
                     x:x,
                     y:y
                 }
                 switch (command){
-                    case "開":
+                    case "攻擊":
 
                         var site_set_ary = [
+                            {x:x,y:y},
                             {x:x-1,y:y},
                             {x:x+1,y:y},
                             {x:x,y:y-1},
@@ -438,7 +491,7 @@ Ex.flag.game.site.sort((a,b)=>{
                             var check_site = true;
                             map_info.site.forEach(site=>{
 
-                                if(site.x===v.x && site.y===v.y) 
+                                if(site.x===v.x && site.y===v.y && site.player===player.id) 
                                     check_site = false;
 
                             })
@@ -491,11 +544,59 @@ Ex.flag.game.site.sort((a,b)=>{
                 );
                 Ex.DB.ref(DB_path).update(player);
                 
+                
+            },
+            GameOverCheck:function(){
 
-                
+                var over_word = "";
 
-                
-                
+                if(Ex.flag.game.site.length>=100){
+
+                    var red = 0,blue = 0;
+
+                    Ex.flag.game.site.forEach(v=>{
+                    
+                        (v.player==="red")?red++:blue++;
+                    
+                    });
+
+                    
+                    if(red>blue) over_word = "紅色勝利";
+                    if(red<blue) over_word = "藍色勝利";
+                    if(red===blue) over_word = "平手";
+
+
+                    document.querySelector("#VoiceWord").innerHTML = `遊戲結束，${over_word}`;
+
+                    Ex.flag.game.game_over = true;
+
+                    Ex.flag.voice.stop();
+                }
+
+                Object.values(Ex.flag.game.players).forEach(player=>{
+
+
+                    Ex.flag.game.site.forEach(site=>{
+
+                        if(site.x===player.x && site.y===player.y && site.player!==player.id){
+
+                            over_word = (player.id==="red")?"藍色勝利":"紅色勝利";
+
+                            document.querySelector("#VoiceWord").innerHTML = `遊戲結束，${over_word}`;
+
+                            Ex.flag.game.game_over = true;
+
+                            Ex.flag.voice.stop();
+
+                        }
+
+
+                    });
+
+
+                });
+
+
             }
 
         },
@@ -504,6 +605,7 @@ Ex.flag.game.site.sort((a,b)=>{
 
             body:()=>{
                 return `<div id="Vue">
+
                 
                 <Map />
 
@@ -522,7 +624,8 @@ Ex.flag.game.site.sort((a,b)=>{
                 
 
 
-                <div id="point" v-html="point"></div>
+                <div id="point" v-html="point"></div><br />
+                <div id="VoiceWord"></div>
                 <br/>
 
                 <button v-for="btn in word_actions" @click="word_action">{{btn}}</button>
@@ -536,10 +639,12 @@ Ex.flag.game.site.sort((a,b)=>{
 
             Grid:()=>{
 
+                //{{x}},{{y}}
+
                 return `<div :style="grid_style" :class="site_class">
 
                     
-                {{x}},{{y}}
+                
 
                 <div :class="'player ' + player" :style="player_style" 
                     v-if="player!==''">{{player}}</div>
@@ -640,9 +745,9 @@ Ex.flag.game.site.sort((a,b)=>{
                                 width:500,
                                 site:Ex.flag.game.site
                             },
-                            players:Ex.flag.game.players,
-                            word_actions:["上","下","右","左","開","右上下右左ABCDEFG開"],
-                            word_actions2:["上","下","右","左","開"]
+                            players:Ex.flag.game.players,/*
+                            word_actions:["上","下","右","左","攻擊"],
+                            word_actions2:["上","下","右","左","攻擊"]*/
                         }
                     },
                     methods:{
@@ -689,11 +794,17 @@ Ex.flag.game.site.sort((a,b)=>{
                         Ex.flag.game.map_info = this.map_info;
 
 
-                        //Ex.func.AI('blue',this.players.blue);
+                        Ex.func.AI('blue',this.players.blue);
                         //Ex.func.AI('red',this.players.red);
 
 
                         Ex.DB.ref(Ex.flag.DB_path).on("value",r=>{
+
+
+                            if(Ex.flag.game.game_over){
+                                Ex.DB.ref(Ex.flag.DB_path).off();
+                                return;
+                            }
 
                             r = r.val();
 
@@ -701,7 +812,6 @@ Ex.flag.game.site.sort((a,b)=>{
                                 location.reload();
                                 return;
                             }
-
 
                             Object.keys(r.players).forEach(player=>{
 
@@ -781,6 +891,7 @@ Ex.flag.game.site.sort((a,b)=>{
                                 });
 
                                 if(check_site){
+
                                     this.map_info.site.push(
                                         {
                                             x:db.x,
@@ -788,8 +899,12 @@ Ex.flag.game.site.sort((a,b)=>{
                                             player:db.player
                                         }
                                     )
+
                                 }
                             });
+
+
+                            Ex.func.GameOverCheck();
                             
                         });
 
@@ -797,14 +912,13 @@ Ex.flag.game.site.sort((a,b)=>{
                         
 
                         Ex.flag.voice.onend = ()=>{
-                            //Ex.flag.voice.start();
+                            //console.log("voice END")
+                            Ex.flag.voice.start();
                         }
                         
 
                         Ex.flag.voice.onresult = (e)=>{
                             
-                            
-                            console.log(e.results);
                             
                             var voice_word = e.results[e.results.length-1][0].transcript;
 
