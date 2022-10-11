@@ -305,8 +305,6 @@ Ex.flag.game.site.sort((a,b)=>{
                 command_ary = command_ary_tmp;
 
 
-
-
                 //console.log(player.x,player.y);
                 //console.log(command_ary);
 
@@ -324,7 +322,7 @@ Ex.flag.game.site.sort((a,b)=>{
                 
 
 
-                if( Ex.func.Delay(`AItime${ai_name}`,1000 * 2,()=>{
+                if( Ex.func.Delay(`AItime${ai_name}`,1000,()=>{
 
                     requestAnimationFrame(()=>{
                         Ex.func.AI(ai_name,player);
@@ -395,7 +393,7 @@ Ex.flag.game.site.sort((a,b)=>{
 
                 //if( Ex.func.Delay(`VoiceAction${player.id}`,500)===false ) return;
 
-                console.log(voice_word);
+
 
                 var DB_path = `${Ex.flag.DB_path}/players/${player.id}`;
                
@@ -414,7 +412,7 @@ Ex.flag.game.site.sort((a,b)=>{
 
                 });
 
-                console.log(command);
+
 
                 if(command==='') return;
 
@@ -642,8 +640,9 @@ Ex.flag.game.site.sort((a,b)=>{
 
                     <div>
                     <button @click="PVE">單機遊戲開始</button>
+                    
                     <button @click="PVP">加入遊戲</button>
-                    <button @click="RESET">初始化</button>
+                    <button @click="RESET">新遊戲</button>
 
                     <input type="text" placeholder="遊戲ID" v-model="game_info.id">
                     </div>
@@ -704,7 +703,6 @@ Ex.flag.game.site.sort((a,b)=>{
 
             Ex.func.StorageUpd();
 
-            
 
             Ex.flag.DB_path  =`game/${Ex.flag.storage.game_id}`;
 
@@ -723,11 +721,14 @@ Ex.flag.game.site.sort((a,b)=>{
                     x:9,
                     y:9};
                 
+                    
 
-                Ex.flag.game.mode = Ex.flag.game.mode||"voice";
+                Ex.flag.game.mode = Ex.flag.game.mode||"mute";
                 Ex.flag.game.site = Object.values(Ex.flag.game.site||{})||[];
+                Ex.flag.game.game_over = (Ex.flag.game.game_over===undefined)?false:Ex.flag.game.game_over;
 
 
+                
 
                 Object.keys(Ex.flag.game.players).forEach(player=>{
 
@@ -810,9 +811,13 @@ Ex.flag.game.site.sort((a,b)=>{
 
                         },
                         PVE:function(e){
+
                             Ex.func.AI('blue',this.players.blue);
+
                         },
                         PVP:function(e){
+
+                            
 
                             Ex.flag.storage.game_id = this.game_info.id;
                             Ex.flag.storage.player = "blue";
@@ -858,18 +863,10 @@ Ex.flag.game.site.sort((a,b)=>{
                         Ex.flag.game.map_info = this.map_info;
 
 
-                        //Ex.func.AI('blue',this.players.blue);
-                        //Ex.func.AI('red',this.players.red);
 
 
                         Ex.DB.ref(Ex.flag.DB_path).on("value",r=>{
 
-
-
-                            if(Ex.flag.game.game_over){
-                                Ex.DB.ref(Ex.flag.DB_path).off();
-                                return;
-                            }
 
                             r = r.val();
 
@@ -880,6 +877,9 @@ Ex.flag.game.site.sort((a,b)=>{
 
                             Ex.flag.game.mode = r.mode;
                             this.game_info.mode = r.mode;
+
+
+
 
 
 
@@ -1011,7 +1011,7 @@ Ex.flag.game.site.sort((a,b)=>{
 
                         };
 
-                        if(Ex.flag.game.mode==="voice") Ex.flag.voice.start();
+                        Ex.flag.voice.start();
 
                             
                     }
